@@ -1,5 +1,6 @@
 'use client';
 
+import { Suspense } from 'react';
 import { ProductGallery } from '@/components/product/ProductGallery';
 import { ProductFilters } from '@/components/product/ProductFilters';
 import { products } from '@/data/products';
@@ -8,12 +9,47 @@ import { useCart } from '@/context/CartContext';
 import { ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 
-export default function Home() {
+function ProductSection() {
     const { filteredProducts, selectedCategory, setFilter } = useFilters(products);
     const { addItem } = useCart();
 
     const categories = Array.from(new Set(products.map((p) => p.category)));
 
+    return (
+        <div className="flex flex-col lg:flex-row gap-12">
+            {/* Sidebar Filters - Sticky & Brutalist */}
+            <aside className="w-full lg:w-64 flex-shrink-0">
+                <div className="sticky top-24 border-2 border-white p-6">
+                    <h3 className="font-display text-2xl uppercase mb-6 border-b-2 border-white pb-2">Filtros</h3>
+                    <ProductFilters
+                        categories={categories}
+                        selectedCategory={selectedCategory}
+                        onSelectCategory={(cat) => setFilter('category', cat)}
+                    />
+                </div>
+            </aside>
+
+            {/* Product Grid */}
+            <main className="flex-1">
+                <div className="flex justify-between items-end mb-8 border-b-2 border-white pb-4">
+                    <h2 className="text-4xl font-display font-bold uppercase">Últimos Lançamentos</h2>
+                    <span className="font-mono text-xs text-gray-400">
+                        EXIBINDO {filteredProducts.length} ITENS
+                    </span>
+                </div>
+
+                <ProductGallery
+                    products={filteredProducts}
+                    onAddToCart={(product) => {
+                        addItem(product);
+                    }}
+                />
+            </main>
+        </div>
+    );
+}
+
+export default function Home() {
     return (
         <div className="flex flex-col min-h-screen">
             {/* HERO SECTION - DIGITAL STREETWEAR */}
@@ -84,36 +120,13 @@ export default function Home() {
             </section>
 
             <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16">
-                <div className="flex flex-col lg:flex-row gap-12">
-                    {/* Sidebar Filters - Sticky & Brutalist */}
-                    <aside className="w-full lg:w-64 flex-shrink-0">
-                        <div className="sticky top-24 border-2 border-white p-6">
-                            <h3 className="font-display text-2xl uppercase mb-6 border-b-2 border-white pb-2">Filtros</h3>
-                            <ProductFilters
-                                categories={categories}
-                                selectedCategory={selectedCategory}
-                                onSelectCategory={(cat) => setFilter('category', cat)}
-                            />
-                        </div>
-                    </aside>
-
-                    {/* Product Grid */}
-                    <main className="flex-1">
-                        <div className="flex justify-between items-end mb-8 border-b-2 border-white pb-4">
-                            <h2 className="text-4xl font-display font-bold uppercase">Últimos Lançamentos</h2>
-                            <span className="font-mono text-xs text-gray-400">
-                                EXIBINDO {filteredProducts.length} ITENS
-                            </span>
-                        </div>
-
-                        <ProductGallery
-                            products={filteredProducts}
-                            onAddToCart={(product) => {
-                                addItem(product);
-                            }}
-                        />
-                    </main>
-                </div>
+                <Suspense fallback={
+                    <div className="flex items-center justify-center p-20 border-2 border-dashed border-white/20">
+                        <div className="text-xl font-mono uppercase animate-pulse">Carregando catálogo...</div>
+                    </div>
+                }>
+                    <ProductSection />
+                </Suspense>
             </div>
         </div>
     );
